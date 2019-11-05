@@ -6,6 +6,7 @@
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
 #include "FPSGameMode.h"
+#include "UnrealNetwork.h"
 
 // Sets default values
 AFPSAIGuard::AFPSAIGuard()
@@ -17,6 +18,8 @@ AFPSAIGuard::AFPSAIGuard()
 
 	PawnSensingComp->OnSeePawn.AddDynamic(this, &AFPSAIGuard::OnPawnSeen);
 	PawnSensingComp->OnHearNoise.AddDynamic(this, &AFPSAIGuard::OnNoiseHeard);
+
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -81,6 +84,11 @@ void AFPSAIGuard::ResetOrientation()
 	SetGuardState(EAIState::Idle);
 }
 
+void AFPSAIGuard::OnRep_GuardState()
+{
+	OnStateChanged(GuardState);
+}
+
 void AFPSAIGuard::SetGuardState(EAIState NewState)
 {
 	if(GuardState == NewState)
@@ -89,8 +97,6 @@ void AFPSAIGuard::SetGuardState(EAIState NewState)
 	}
 
 	GuardState = NewState;
-
-	OnStateChanged(NewState);
 }
 
 // Called every frame
@@ -98,4 +104,11 @@ void AFPSAIGuard::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AFPSAIGuard::GetLifetimeReplicatedProps(TArray< class FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSAIGuard, GuardState);
 }
